@@ -33,6 +33,8 @@ class NovaPolicyTests(unittest.TestCase):
     OTHER_SERVER_PASSWORD = "nopass"
     LAST_SERVER_PASSWORD = "maypass"
 
+    # Increment every execution
+    COUNT = '1'
 
     KEYSTONE_AUTH_URL = "http://10.1.0.68:5000"
     NOVA_AUTH_URL = "http://10.1.0.68:8774"
@@ -117,11 +119,6 @@ class NovaPolicyTests(unittest.TestCase):
                                                         projectid=ADMIN_PROJECT_ID,
                                                         auth_url=KEYSTONE_AUTH_URL + "/v2.0")
 
-    #nova_cloud_client         = novautils.create_client(cloud_client        , KEYSTONE_AUTH_URL)
-    #other_nova_cloud_client   = novautils.create_client(other_cloud_client  , KEYSTONE_AUTH_URL)
-    #nova_project_client       = novautils.create_client(project_client      , KEYSTONE_AUTH_URL)
-    #other_nova_project_client = novautils.create_client(other_project_client, KEYSTONE_AUTH_URL)
-    #nova_member_client        = novautils.create_client(member_client       , KEYSTONE_AUTH_URL)
     nova_cloud_client = novautils.create_client(username=CLOUD_ADMIN_USER,
                                                           password=CLOUD_ADMIN_PASSWD,
                                                           projectid=PROJECT_ID,
@@ -158,73 +155,24 @@ class NovaPolicyTests(unittest.TestCase):
     FLAVOR_VCPUS = 1
     FLAVOR_DISK = 1024
 
-    IMAGE_ID = '9045e59e-a580-4065-8650-bdb662ae4d8d'
+    IMAGE_ID = 'cc24a286-edc7-40ad-9923-994f6f3588bf'
 
-    COUNT = '40'
-    print "####################"
-    print COUNT
     CLOUD_ADMIN_SERVER = "Cloud_admin_server" + COUNT
     PROJECT_ADMIN_SERVER = "Project_admin_server" + COUNT
     PROJECT_MEMBER_SERVER = "Project_member_server" + COUNT
 
-    print "$$$$$$$$$$$$$$$$$$$$$$$$$$$$   VAI CRIAR ESSA BAGACA"
     SERVER_MEMBER = novautils.create_server(nova_cloud_client,
                            PROJECT_MEMBER_SERVER,
                            IMAGE_ID,
                            FLAVOR_TINY_ID)
     time.sleep(60)
-    print "$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$   ESSA PASSOU, BABACA"
-
-    #IMAGE = nova_cloud_client.images.list()[0]
-    #FLAVOR = nova_admin_client.flavors.list()[0]
-    #print image
 
     def assertAnyRaise(self, callableObj):
         try:
             callableObj()
         except:
             return
-        raise AssertionError('should raise an exception')
-
-    def tearDown(self):
-
-        '''#Remove Cloud Admin
-        keystoneutils.remove_user(self.admin_client, self.cloud_admin)
-        keystoneutils.remove_user(self.admin_client, self.other_cloud_admin)
-        keystoneutils.remove_role(self.admin_client, self.cloud_admin_role)
-
-        #Remove Project Admin
-        keystoneutils.remove_user(self.admin_client, self.project_admin)
-        keystoneutils.remove_user(self.admin_client, self.other_project_admin)
-        keystoneutils.remove_role(self.admin_client, self.project_admin_role)
-
-        #Remove member
-        keystoneutils.remove_project(self.admin_client, self.project)
-        keystoneutils.remove_project(self.admin_client, self.other_project)
-        keystoneutils.remove_user(self.admin_client, self.project_member)
-        keystoneutils.remove_user(self.admin_client, self.other_project_member)
-        keystoneutils.remove_role(self.admin_client, self.project_member_role)'''
-
-    def setUp(self):
-
-
-        '''self.cloud_admin_image                  = glanceutils.create_image(self.glance_cloud_client      , "BigBoss_Image"     , visibility="public")
-        self.cloud_admin_image_private          = glanceutils.create_image(self.glance_cloud_client      , "BigBoss_Image_Private")
-        self.other_cloud_admin_image            = glanceutils.create_image(self.other_glance_cloud_client, "OtherBigBoss_Image", visibility="public")
-        self.other_cloud_admin_image_private    = glanceutils.create_image(self.other_glance_cloud_client, "OtherBigBoss_Image_Private")
-
-        self.project_admin_image                = glanceutils.create_image(self.glance_project_client      , "Boss_Image"     , visibility="public")
-        self.project_admin_image_private        = glanceutils.create_image(self.glance_project_client      , "Boss_Image_Private")
-        self.other_project_admin_image          = glanceutils.create_image(self.other_glance_project_client, "OtherBoss_Image", visibility="public")
-        self.other_project_admin_image_private  = glanceutils.create_image(self.other_glance_project_client, "OtherBoss_Image_Private")
-
-        self.project_member_image               = glanceutils.create_image(self.glance_member_client      , "Image"     , visibility="public")
-        self.project_member_image_private       = glanceutils.create_image(self.glance_member_client      , "Image_Private")
-        self.other_project_member_image         = glanceutils.create_image(self.other_glance_member_client, "OtherImage", visibility="public")
-        self.other_project_member_image_private = glanceutils.create_image(self.other_glance_member_client, "OtherImage_Private")'''
-
-        #print(glanceutils.check_get_image_list_has_images(self.glance_admin_client))'''
-
+        raise AssertionError('Should have raised an exception')
 
     ###################################
     ###            FLAVORS
@@ -305,23 +253,31 @@ class NovaPolicyTests(unittest.TestCase):
         novautils.create_flavor(self.nova_cloud_client,
                                 self.OTHER_FLAVOR_NAME, self.FLAVOR_RAM,
                                 self.FLAVOR_VCPUS, self.FLAVOR_DISK,
-                                self.OTHER_FLAVOR_ID, public=False)
+                                self.LAST_FLAVOR_ID, public=False)
 
         #The project admin can give access
         novautils.add_flavor_tenant_access(self.nova_project_admin_client,
-                                          self.OTHER_FLAVOR_ID,
+                                          self.LAST_FLAVOR_ID,
                                           self.PROJECT_ID)
+
+        novautils.list_flavor_tenant_access(self.nova_cloud_client,
+                                         flavor=self.LAST_FLAVOR_ID)
 
         #The project member can't give access
         self.assertAnyRaise(lambda:
           novautils.add_flavor_tenant_access(self.nova_member_client,
-                                            self.OTHER_FLAVOR_ID,
+                                            self.LAST_FLAVOR_ID,
                                             self.PROJECT_ID))
 
-        novautils.get_flavor(self.other_nova_member_client, self.OTHER_FLAVOR_ID)
+        self.assertAnyRaise(lambda:
+          novautils.get_flavor(self.other_nova_member_client,
+                               self.LAST_FLAVOR_ID))
+
+        novautils.get_flavor(self.nova_member_client,
+                               self.LAST_FLAVOR_ID)
 
         novautils.delete_flavor(self.nova_cloud_client,
-                self.OTHER_FLAVOR_ID)
+                self.LAST_FLAVOR_ID)
 
     def test_remove_access_private_flavor(self):
 
@@ -540,53 +496,28 @@ class NovaPolicyTests(unittest.TestCase):
     ### SERVER ACTIONS
     #########################
 
-    '''def test_resize(self):
-
-          print "COMECOOOOOOOOOOOOOOOOOOOOOOOU"
+    def test_resize(self):
 
           wait_for_active(self.nova_cloud_client, self.SERVER_MEMBER)
-
-          print '11111111111111111111111111'
 
                    #Everyone on the project can reboot
           novautils.resize(self.nova_member_client,
                                   self.SERVER_MEMBER,
                                   self.FLAVOR_SMALL_ID)
 
-
-          print '2222222222222222222222'
-          #novautils.pause(self.nova_member_client,
-          #                       self.SERVER_MEMBER)
-
-
-          print '3333333333333333333333333333333333'
-
           wait_for_verify_resize(self.nova_cloud_client, self.SERVER_MEMBER)
 
-
-          print '4444444444444444444444444444'
           novautils.confirm_resize(self.nova_cloud_client, self.SERVER_MEMBER)
 
-          print '55555555555555555555555555555'
-
           novautils.start(self.nova_cloud_client, self.SERVER_MEMBER)
-
-          print '66666666666666666666666666666666666666666666'
 
 
           wait_for_active(self.nova_cloud_client, self.SERVER_MEMBER)
 
-          ### O ERRO TA NESSA CHAMDA AI... DA UMA OLHADA NO LOG...
-
-
-          #wait_for_active(self.nova_cloud_client, self.SERVER_MEMBER)
-
-          print '7777777777777777777777777777777'
-
           novautils.pause(self.nova_member_client,
                                   self.SERVER_MEMBER)
 
-          wait_for_paused(self.nova_cloud_client, self.SERVER_MEMBER)
+          wait_for_status(self.nova_cloud_client, self.SERVER_MEMBER, "PAUSED")
 
           novautils.resize(self.nova_cloud_client,
                                     self.SERVER_MEMBER,
@@ -602,39 +533,190 @@ class NovaPolicyTests(unittest.TestCase):
                                       self.SERVER_MEMBER,
                                       self.FLAVOR_SMALL_ID))
 
-          print "ACABOOOOOOOOOOOOOOOOOOOOOOOOOOU"'''
-
-
-def test_stop(self):
+    def test_stop_start(self):
+      print 'test_stop'
       wait_for_active(self.nova_cloud_client, self.SERVER_MEMBER)
       novautils.stop(self.nova_member_client,
                                   self.SERVER_MEMBER)
       wait_for_status(self.nova_cloud_client, self.SERVER_MEMBER, "SHUTOFF")
-      self.assertTrue(self.SERVER_MEMBER.status == "SHUTOFF")
+
+      novautils.start(self.nova_cloud_client,
+                        self.SERVER_MEMBER)
+      wait_for_status(self.nova_cloud_client, self.SERVER_MEMBER, "ACTIVE")
+
+      # From other project can' do
+      self.assertAnyRaise(lambda:
+        novautils.stop(self.other_member_client,
+                              self.SERVER_MEMBER))
+      self.assertAnyRaise(lambda:
+        novautils.start(self.other_nova_project_admin_client,
+                              self.SERVER_MEMBER))
 
 
-def test_pause(self):
+    def test_pause_unpause(self):
+      print 'test_pause_unpause'
+      # Member can, since he is the owner
       wait_for_active(self.nova_cloud_client, self.SERVER_MEMBER)
       novautils.pause(self.nova_member_client,
                                   self.SERVER_MEMBER)
       wait_for_status(self.nova_cloud_client, self.SERVER_MEMBER, "PAUSED")
       self.assertTrue(self.SERVER_MEMBER.status == "PAUSED")
 
-def test_suspend(self):
+      novautils.unpause(self.nova_cloud_client,
+                                  self.SERVER_MEMBER)
+      wait_for_status(self.nova_cloud_client, self.SERVER_MEMBER, "ACTIVE")
+
+      # From other project can' do
+      self.assertAnyRaise(lambda:
+        novautils.pause(self.other_member_client,
+                              self.SERVER_MEMBER))
+      self.assertAnyRaise(lambda:
+        novautils.unpause(self.other_nova_project_admin_client,
+                              self.SERVER_MEMBER))
+
+    def test_suspend_resume(self):
+      print 'test_suspend_resume'
       wait_for_active(self.nova_cloud_client, self.SERVER_MEMBER)
       novautils.suspend(self.nova_member_client,
                                   self.SERVER_MEMBER)
       wait_for_status(self.nova_cloud_client, self.SERVER_MEMBER, "SUSPENDED")
-      self.assertTrue(self.SERVER_MEMBER.status == "SUSPENDED")
 
+      novautils.resume(self.nova_cloud_client,
+                                  self.SERVER_MEMBER)
+      wait_for_status(self.nova_cloud_client, self.SERVER_MEMBER, "ACTIVE")
+
+      # From other project can' do
+      self.assertAnyRaise(lambda:
+        novautils.suspend(self.other_member_client,
+                              self.SERVER_MEMBER))
+      self.assertAnyRaise(lambda:
+        novautils.resume(self.other_nova_project_admin_client,
+                              self.SERVER_MEMBER))
+
+
+    def test_lock_unlock(self):
+      print 'test_lock_unlock'
+      wait_for_active(self.nova_cloud_client, self.SERVER_MEMBER)
+      novautils.lock(self.nova_member_client,
+                                  self.SERVER_MEMBER)
+      #wait_for_status(self.nova_cloud_client, self.SERVER_MEMBER, "LOCKED")
+      #self.assertTrue(self.SERVER_MEMBER.status == "LOCKED")
+
+      novautils.unlock(self.nova_cloud_client,
+                                  self.SERVER_MEMBER)
+      #wait_for_status(self.nova_cloud_client, self.SERVER_MEMBER, "ACTIVE")
+      #self.assertTrue(self.SERVER_MEMBER.status == "ACTIVE")
+
+      # From other project can' do
+      self.assertAnyRaise(lambda:
+        novautils.lock(self.other_member_client,
+                              self.SERVER_MEMBER))
+      self.assertAnyRaise(lambda:
+        novautils.unlock(self.other_nova_project_admin_client,
+                              self.SERVER_MEMBER))
+    def test_reboot(self):
+
+          wait_for_active(self.nova_cloud_client, self.SERVER_MEMBER)
+
+         #Everyone on the project can reboot
+          novautils.reboot(self.nova_member_client,
+                                  self.SERVER_MEMBER)
+
+          wait_for_active(self.nova_cloud_client, self.SERVER_MEMBER)
+
+
+          novautils.reboot(self.nova_cloud_client,
+                                    self.SERVER_MEMBER)
+
+          wait_for_active(self.nova_cloud_client, self.SERVER_MEMBER)
+
+          # Member from another project can't
+          self.assertAnyRaise(lambda:
+            novautils.reboot(self.other_member_client,
+                                      self.SERVER_MEMBER))
+
+    def test_rebuild(self):
+
+          wait_for_active(self.nova_cloud_client, self.SERVER_MEMBER)
+
+         #Everyone on the project can reboot
+          novautils.rebuild(self.nova_member_client,
+                                  self.SERVER_MEMBER,
+                                  self.IMAGE_ID)
+
+          wait_for_active(self.nova_cloud_client, self.SERVER_MEMBER)
+
+
+          novautils.rebuild(self.nova_cloud_client,
+                                    self.SERVER_MEMBER,
+                                    self.IMAGE_ID)
+
+          wait_for_active(self.nova_cloud_client, self.SERVER_MEMBER)
+
+          # Member from another project can't
+          self.assertAnyRaise(lambda:
+            novautils.rebuild(self.other_member_client,
+                                      self.SERVER_MEMBER,
+                                      self.IMAGE_ID))
+
+
+      ##################
+      ### HOSTS
+      ###################
+
+    def test_list_hosts(self):
+      # Cloud Admin and project Admin can
+      novautils.host_list(self.nova_cloud_client)
+
+      novautils.host_list(self.nova_project_admin_client)
+
+      # Member can't do
+      self.assertAnyRaise(lambda:
+        novautils.host_list(self.other_member_client))
+
+    def test_get_host(self):
+      # Cloud Admin and project Admin can
+      lista_hosts = novautils.host_list(self.nova_cloud_client)
+
+      host = lista_hosts[0].host_name
+      novautils.get_host(self.nova_cloud_client, host)
+
+      novautils.get_host(self.nova_project_admin_client, host)
+
+      # Member can't do
+      self.assertAnyRaise(lambda:
+        novautils.get_host(self.other_member_client, host))
+
+    def test_host_actions(self):
+      # Cloud Admin and project Admin can
+      lista_hosts = novautils.host_list(self.nova_cloud_client)
+
+      host = lista_hosts[0].host_name
+
+      # Member can't do
+      self.assertAnyRaise(lambda:
+        novautils.start_host(self.nova_cloud_client, host))
+
+      # Member can't do
+      self.assertAnyRaise(lambda:
+        novautils.shutdown_host(self.nova_cloud_client, host))
+
+      # Member can't do
+      self.assertAnyRaise(lambda:
+        novautils.reboot_host(self.nova_cloud_client, host))
 
 
 def wait_for_status(client, instance, status):
       # Wait for the instance to be active
+      x = 0
+      print "waiting for "+status
       state = novautils.get_server_status(client, instance.id)
       while (state != status ):
         time.sleep(30)
+        x += 1
         state = novautils.get_server_status(client, instance.id)
+        if x > 15:
+          raise AssertionError('Demorou pra cacete')
         if state == "ERROR":
           raise AssertionError('Instance Error')
 
@@ -645,7 +727,7 @@ def wait_for_active(client, instance):
         time.sleep(30)
         state = novautils.get_server_status(client, instance.id)
         if state == "ERROR":
-          raise AssertionError('Instance Error')
+          raise AssertionError('Instance with status Error')
 
 def wait_for_verify_resize(client, instance):
       # Wait for the instance to shutten
@@ -654,60 +736,10 @@ def wait_for_verify_resize(client, instance):
         time.sleep(30)
         state = novautils.get_server_status(client, instance.id)
         if state == "ERROR":
-          raise AssertionError('Instance Error')
-
-
-
-
+          raise AssertionError('Instance with status Error')
 
 def main():
      unittest.main()
 
 if __name__ == '__main__':
      main()
-
-
-'''def test_reboot(self):
-
-      wait_for_active(self.nova_cloud_client, self.SERVER_MEMBER)
-
-     #Everyone on the project can reboot
-      novautils.reboot(self.nova_member_client,
-                              self.SERVER_MEMBER)
-
-      wait_for_active(self.nova_cloud_client, self.SERVER_MEMBER)
-
-
-      novautils.reboot(self.nova_cloud_client,
-                                self.SERVER_MEMBER)
-
-      wait_for_active(self.nova_cloud_client, self.SERVER_MEMBER)
-
-      # Member from another project can't
-      self.assertAnyRaise(lambda:
-        novautils.reboot(self.other_member_client,
-                                  self.SERVER_MEMBER))'''
-
-'''def test_rebuild(self):
-
-      wait_for_active(self.nova_cloud_client, self.SERVER_MEMBER)
-
-     #Everyone on the project can reboot
-      novautils.rebuild(self.nova_member_client,
-                              self.SERVER_MEMBER,
-                              self.IMAGE_ID)
-
-      wait_for_active(self.nova_cloud_client, self.SERVER_MEMBER)
-
-
-      novautils.rebuild(self.nova_cloud_client,
-                                self.SERVER_MEMBER,
-                                self.IMAGE_ID)
-
-      wait_for_active(self.nova_cloud_client, self.SERVER_MEMBER)
-
-      # Member from another project can't
-      self.assertAnyRaise(lambda:
-        novautils.rebuild(self.other_member_client,
-                                  self.SERVER_MEMBER,
-                                  self.IMAGE_ID))'''

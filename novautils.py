@@ -62,8 +62,6 @@ def  confirm_resize(client, server):
 
 def get_server_status(client, server):
     server = get_server(client, server)
-    print "$$$$$$$$$$$$$$$$$$$$$$s"
-    print server.status
     return server.status
 
 def stop(client, server):
@@ -75,5 +73,32 @@ def start(client, server):
 def pause(client, server):
     return client.servers.pause(server)
 
+def unpause(client, server):
+    return client.servers.unpause(server)
+
 def suspend(client, server):
     return client.servers.suspend(server)
+
+def resume(client, server):
+    return client.servers.resume(server)
+
+def lock(client, server):
+    return client.servers.lock(server)
+
+def unlock(client, server):
+    return client.servers.unlock(server)
+
+def host_list(client):
+    return client.hosts.list()
+
+def get_host(client, host):
+    return client.hosts.get(host)
+
+def shutdown_host(client, host):
+    return client.hosts.host_action(host, "SHUTDOWN")
+
+def reboot_host(client, host):
+    return client.hosts.host_action(host, "REBOOT")
+
+def start_host(client, host):
+    return client.hosts.host_action(host, "STARTUP")
